@@ -24,5 +24,13 @@ def test_update_key():
     d['grant'] = 'sangria'
     assert d['grant'] == 'sangria'
 
+def test_delete_key():
+    d = Dict()
+    d['peter'] = 'pinot grigio'
+    assert d['peter'] == 'pinot grigio'
+    del d['peter']
+    with pytest.raises(KeyError):
+        d['peter']
+
 if __name__ == '__main__':
     pytest.main(['test_dict.py'])

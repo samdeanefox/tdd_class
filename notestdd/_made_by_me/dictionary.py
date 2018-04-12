@@ -21,3 +21,9 @@ class Dict:
         else:
             self.my_keys.append(key)
             self.my_values.append(value)
+
+    def __delitem__(self, key):
+        if key in self.my_keys:
+            position = self.my_keys.index(key)
+            del self.my_keys[position]
+            del self.my_values[position]
