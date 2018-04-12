@@ -17,5 +17,12 @@ def test_key_not_found():
     with pytest.raises(KeyError):
         d['gerard']
 
+def test_update_key():
+    d = Dict()
+    d['grant'] = 'beer'
+    assert d['grant'] == 'beer'
+    d['grant'] = 'sangria'
+    assert d['grant'] == 'sangria'
+
 if __name__ == '__main__':
     pytest.main(['test_dict.py'])

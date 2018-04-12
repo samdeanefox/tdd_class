@@ -15,5 +15,9 @@ class Dict:
             raise KeyError(key)
 
     def __setitem__(self, key, value):
-        self.my_keys.append(key)
-        self.my_values.append(value)
+        if key in self.my_keys:
+            position = self.my_keys.index(key)
+            self.my_values[position] = value
+        else:
+            self.my_keys.append(key)
+            self.my_values.append(value)
