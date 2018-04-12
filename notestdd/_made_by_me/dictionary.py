@@ -17,5 +17,3 @@ class Dict:
     def __setitem__(self, key, value):
         self.my_keys.append(key)
         self.my_values.append(value)
-
-        print('yo')
