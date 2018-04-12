@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Hettinger;Raymond
+FN:Raymond, Hettinger
+ORG:Earthborn Studios Inc
+TITLE: VP Raisin Smushing
+TEL;WORK;VOICE:(205) 559-555-1212
+TEL;HOME;VOICE:(205) 613-0280
+TEL;
+ADR;WORK;PREF:;;7575 Parkway Dr;Leeds;AL;35094;United States of America
+EMAIL:raymond@example.com
+REV:20080424T195243Z
+END:VCARD

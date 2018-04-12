@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Zapata;Luis
+FN:Luis, Zapata
+ORG:Earthborn Studios Inc
+TITLE: VP Grape Sales
+TEL;WORK;VOICE:(205) 559-555-2301
+TEL;HOME;VOICE:(205) 613-0280
+TEL;
+ADR;WORK;PREF:;;7575 Parkway Dr;Leeds;AL;35094;United States of America
+EMAIL:luis@example.com
+REV:20080424T195243Z
+END:VCARD

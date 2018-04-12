@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Jones;David
+FN:David, Jones
+ORG:Earthborn Studios Inc
+TITLE: Transport Specialist
+TEL;WORK;VOICE:(205) 559-555-1892
+TEL;HOME;VOICE:(205) 613-0280
+TEL;
+ADR;WORK;PREF:;;7575 Parkway Dr;Leeds;AL;35094;United States of America
+EMAIL:djones@example.com
+REV:20080424T195243Z
+END:VCARD

@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Davis;Harold
+FN:Harold, Davis
+ORG:Earthborn Studios Inc
+TITLE: Quality Assurance Tech
+TEL;WORK;VOICE:(205) 559-555-1478
+TEL;HOME;VOICE:(205) 613-0280
+TEL;
+ADR;WORK;PREF:;;7575 Parkway Dr;Leeds;AL;35094;United States of America
+EMAIL:hdavis@example.com
+REV:20080424T195243Z
+END:VCARD

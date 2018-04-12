@@ -1,0 +1,970 @@
+changeset:   10:1c2cc334b970
+tag:         tip
+user:        Raymond Hettinger <python@rcn.com>
+date:        Wed Jul 12 10:14:23 2017 -0700
+summary:     Add logging and test discovery
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -7,6 +7,8 @@
+ 
+ '''
+ 
++import logging
++
+ class TestResult:
+     'Accumulate number of tests run and number of failures'
+ 
+@@ -43,6 +45,9 @@
+             test_method()
+         except AssertionError:
+             self.result.test_failed()
++            logging.exception('Test failed: %s', self.method_name)
++        else:
++            logging.info('Test succeeded: %s', self.method_name)
+ 
+         # Run the "tear_down" method if it exists
+         teardown_method = getattr(self, 'tear_down', None)
+@@ -65,11 +70,12 @@
+             print('.', end='')
+         print()
+ 
+-def run_tests(test_class, test_method_names):
+-    'Test runner'
++def run_tests(test_class):
++    'Test runner with automatic discovery of test_ method names'
+     suite = TestSuite()
+-    for method_name in test_method_names:
+-        suite.add(test_class, method_name)
++    for method_name in dir(test_class):
++        if method_name.startswith('test_'):
++            suite.add(test_class, method_name)
+ 
+     result = TestResult()
+     suite.run(result)
+diff --git a/test_the_minimum_with_beck_framework.py b/test_the_minimum_with_beck_framework.py
+--- a/test_the_minimum_with_beck_framework.py
++++ b/test_the_minimum_with_beck_framework.py
+@@ -1,10 +1,18 @@
+ import beck
+ import the_minimum
+ 
++import logging
++
++logging.basicConfig(
++    level=logging.INFO,
++    filename='the_min_tests.log',
++)
++
+ class TestMinimumClasses(beck.TestCase):
+ 
+     def set_up(self):
+         self.ee = the_minimum.Employee('Navra Ananda', 'female', 200)
++        logging.debug('Setup Navra as an example Employee')
+ 
+     def test_employee(self):
+         navra = self.ee
+@@ -18,10 +26,10 @@
+         navra = self.ee
+         assert navra.salary == 200
+         navra.give_raise(-10)
+-        assert navra.salary == 180
++        assert navra.salary == 185      # Intentionally failing test
+ 
+     def tear_down(self):
+         self.ee = None
+ 
+-beck.run_tests(TestMinimumClasses, ['test_employee',
+-                               'test_employee_neg_raise'])
++if __name__ == '__main__':
++    beck.run_tests(TestMinimumClasses)
+
+changeset:   9:3bc2b199e016
+user:        Raymond Hettinger <python@rcn.com>
+date:        Tue Jul 11 13:33:26 2017 -0700
+summary:     Factor code into separate modules
+
+diff --git a/test_beck.py b/test_beck.py
+--- a/test_beck.py
++++ b/test_beck.py
+@@ -59,30 +59,5 @@
+ 
+ #########################################################
+ 
+-import the_minimum 
+-
+-class TestMinimumClasses(TestCase):
+-
+-    def set_up(self):
+-        self.ee = the_minimum.Employee('Navra Ananda', 'female', 200)
+ 
+-    def test_employee(self):
+-        navra = self.ee
+-        assert navra.name == 'Navra Ananda'
+-        assert navra.gender == 'female'
+-        assert navra.salary == 200
+-        navra.give_raise(10)
+-        assert navra.salary == 220
+-                
+-    def test_employee_neg_raise(self):
+-        navra = self.ee
+-        assert navra.salary == 200
+-        navra.give_raise(-10)
+-        assert navra.salary == 180
+ 
+-    def tear_down(self):
+-        self.ee = None
+-
+-run_tests(TestMinimumClasses, ['test_employee',
+-                               'test_employee_neg_raise'])
+-
+diff --git a/test_minimum.py b/test_minimum.py
+new file mode 100644
+--- /dev/null
++++ b/test_minimum.py
+@@ -0,0 +1,49 @@
++import unittest             # This is the test framework
++import the_minimum          # Module under test
++
++class TestMinimumFunctions(unittest.TestCase):   # Test case or Test suite
++
++    def test_collatz(self):             # test method or fixture
++        self.assertEqual(the_minimum.collatz(10), 5)
++        self.assertEqual(the_minimum.collatz(11), 34)
++        self.assertEqual(the_minimum.collatz(0), 0)
++        with self.assertRaises(TypeError):
++            the_minimum.collatz('hello')
++        with self.assertRaises(TypeError):
++            the_minimum.collatz(10, 11)
++        with self.assertRaises(TypeError):
++            the_minimum.collatz()
++
++class TestMinimumClasses(unittest.TestCase):
++
++    def setUp(self):
++        self.ee = the_minimum.Employee('Navra Ananda', 'female', 200)
++
++    def test_employee(self):
++        navra = self.ee
++        self.assertEqual(navra.name, 'Navra Ananda')
++        self.assertEqual(navra.gender, 'female')
++        self.assertEqual(navra.salary, 200)
++        navra.give_raise(10)
++        self.assertEqual(navra.salary, 220)        
++                
++    def test_employee_neg_raise(self):
++        navra = self.ee
++        self.assertEqual(navra.salary, 200)
++        navra.give_raise(-10)
++        self.assertEqual(navra.salary, 180)
++
++    def tearDown(self):
++        self.ee = None
++        
++
++if __name__ == '__main__':
++
++    unittest.main()         # Test runner
++
++
++
++
++
++
++
+diff --git a/test_the_minimum_with_beck_framework.py b/test_the_minimum_with_beck_framework.py
+new file mode 100644
+--- /dev/null
++++ b/test_the_minimum_with_beck_framework.py
+@@ -0,0 +1,27 @@
++import beck
++import the_minimum
++
++class TestMinimumClasses(beck.TestCase):
++
++    def set_up(self):
++        self.ee = the_minimum.Employee('Navra Ananda', 'female', 200)
++
++    def test_employee(self):
++        navra = self.ee
++        assert navra.name == 'Navra Ananda'
++        assert navra.gender == 'female'
++        assert navra.salary == 200
++        navra.give_raise(10)
++        assert navra.salary == 220
++
++    def test_employee_neg_raise(self):
++        navra = self.ee
++        assert navra.salary == 200
++        navra.give_raise(-10)
++        assert navra.salary == 180
++
++    def tear_down(self):
++        self.ee = None
++
++beck.run_tests(TestMinimumClasses, ['test_employee',
++                               'test_employee_neg_raise'])
+
+changeset:   8:7afdd4c7ecb4
+user:        Raymond Hettinger <python@rcn.com>
+date:        Tue Jul 11 12:11:21 2017 -0700
+summary:     Factor the product (test framework) separate from the tests of the framework
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -5,19 +5,8 @@
+ * Use our framework to test itself
+ * Practice Python fundamentals
+ 
+-Todo (Desiderata):
+-
+-+ call a method
+-+ have a setup
+-+ have a teardown
+-- handle a failing test
+-- run many tests
+-+ report collected results
+ '''
+ 
+-##########################################################
+-# This is our product.  We're building test framework like unittest, py.test, and nose
+-
+ class TestResult:
+     'Accumulate number of tests run and number of failures'
+ 
+@@ -35,6 +24,7 @@
+         return f'{self.run_count} run, {self.failure_count} failed'
+ 
+ class TestCase:
++    'Run a single test method'
+ 
+     def __init__(self, method_name, result):
+         self.method_name = method_name
+@@ -59,49 +49,37 @@
+         if teardown_method is not None:
+             teardown_method()
+ 
+-##########################################################
+-# These are the tests for our product
+-
+-def add(x, y):
+-    return x * y            # <== Intentionally buggy code
+-
+-def sub(x, y):
+-    return x - y            # <== Intentionally correct code
+-
+-class TestMathFunctions(TestCase):
+-
+-    def test_add(self):
+-        assert add(3, 5) == 8
+-
+-    def test_sub(self):
+-        assert sub(10, 3) == 7
+-
+-# Tests for the Test Result Class #######################
+-
+-result = TestResult()
++class TestSuite:
++    'A collection of test cases than can be run together'
+ 
+-assert result.run_count == 0
+-assert result.summary() == '0 run, 0 failed'
+-result.test_started()
+-assert result.run_count == 1
+-assert result.summary() == '1 run, 0 failed'
+-
+-assert result.failure_count == 0
+-result.test_failed()
+-assert result.failure_count == 1
+-assert result.summary() == '1 run, 1 failed'
++    def __init__(self):
++        self.cases = []
+ 
+-#########################################################
+-
+-result = TestResult()
++    def add(self, test_case_class, method_name):
++        self.cases.append( (test_case_class, method_name) )
+ 
+-test = TestMathFunctions('test_add', result)
+-assert result.summary() == '0 run, 0 failed'
+-test.run()
+-assert result.summary() == '1 run, 1 failed'
++    def run(self, result):
++        for test_case_class, method_name in self.cases:
++            testcase = test_case_class(method_name, result)
++            testcase.run()
++            print('.', end='')
++        print()
+ 
+-test = TestMathFunctions('test_sub', result)
+-test.run()
+-assert result.summary() == '2 run, 1 failed'
++def run_tests(test_class, test_method_names):
++    'Test runner'
++    suite = TestSuite()
++    for method_name in test_method_names:
++        suite.add(test_class, method_name)
+ 
+-print('Done!')
++    result = TestResult()
++    suite.run(result)
++    print(result.summary())
++
++
++
++
++
++
++
++
++
+diff --git a/test_beck.py b/test_beck.py
+new file mode 100644
+--- /dev/null
++++ b/test_beck.py
+@@ -0,0 +1,88 @@
++from beck import TestResult, TestCase, TestSuite, run_tests
++
++##########################################################
++# These are the tests for our product
++
++def add(x, y):
++    return x * y            # <== Intentionally buggy code
++
++def sub(x, y):
++    return x - y            # <== Intentionally correct code
++
++class TestMathFunctions(TestCase):
++
++    def test_add(self):
++        assert add(3, 5) == 8
++
++    def test_sub(self):
++        assert sub(10, 3) == 7
++
++# Tests for the Test Result Class #######################
++
++result = TestResult()
++
++assert result.run_count == 0
++assert result.summary() == '0 run, 0 failed'
++result.test_started()
++assert result.run_count == 1
++assert result.summary() == '1 run, 0 failed'
++
++assert result.failure_count == 0
++result.test_failed()
++assert result.failure_count == 1
++assert result.summary() == '1 run, 1 failed'
++
++#########################################################
++
++result = TestResult()
++
++test = TestMathFunctions('test_add', result)
++assert result.summary() == '0 run, 0 failed'
++test.run()
++assert result.summary() == '1 run, 1 failed'
++
++test = TestMathFunctions('test_sub', result)
++test.run()
++assert result.summary() == '2 run, 1 failed'
++
++print('Done!')
++
++#########################################################
++
++suite = TestSuite()
++suite.add(TestMathFunctions, 'test_add')
++suite.add(TestMathFunctions, 'test_sub')
++
++result = TestResult()
++suite.run(result)
++print(result.summary())
++
++#########################################################
++
++import the_minimum 
++
++class TestMinimumClasses(TestCase):
++
++    def set_up(self):
++        self.ee = the_minimum.Employee('Navra Ananda', 'female', 200)
++
++    def test_employee(self):
++        navra = self.ee
++        assert navra.name == 'Navra Ananda'
++        assert navra.gender == 'female'
++        assert navra.salary == 200
++        navra.give_raise(10)
++        assert navra.salary == 220
++                
++    def test_employee_neg_raise(self):
++        navra = self.ee
++        assert navra.salary == 200
++        navra.give_raise(-10)
++        assert navra.salary == 180
++
++    def tear_down(self):
++        self.ee = None
++
++run_tests(TestMinimumClasses, ['test_employee',
++                               'test_employee_neg_raise'])
++
+
+changeset:   7:e4c301476514
+user:        Raymond Hettinger <python@rcn.com>
+date:        Tue Jul 11 11:34:14 2017 -0700
+summary:     Remove the was_run checks
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -39,9 +39,6 @@
+     def __init__(self, method_name, result):
+         self.method_name = method_name
+         self.result = result
+-        self.was_run = False
+-        self.was_setup = False
+-        self.was_torn_down = False
+ 
+     def run(self):
+         # Run the "set_up" method if it exists
+@@ -62,11 +59,6 @@
+         if teardown_method is not None:
+             teardown_method()
+ 
+-    def test_running(self):
+-        assert self.was_run == False
+-        self.run()
+-        assert self.was_run == True
+-
+ ##########################################################
+ # These are the tests for our product
+ 
+@@ -76,34 +68,18 @@
+ def sub(x, y):
+     return x - y            # <== Intentionally correct code
+ 
+-class FrameworkTest(TestCase):
+-
+-    def set_up(self):
+-        self.was_setup = True
++class TestMathFunctions(TestCase):
+ 
+     def test_add(self):
+-        self.was_run = True
+         assert add(3, 5) == 8
+ 
+     def test_sub(self):
+-        self.was_run = True
+-        assert sub(10, 3) == 7
+-
+-    def tear_down(self):
+-        self.was_torn_down = True
+-
+-class FrameworkTestNoSetupNoTeardown(TestCase):
+-
+-    def test_add(self):
+-        self.was_run = True
+-
+-    def test_sub(self):
+-        self.was_run = True
+         assert sub(10, 3) == 7
+ 
+ # Tests for the Test Result Class #######################
+ 
+ result = TestResult()
++
+ assert result.run_count == 0
+ assert result.summary() == '0 run, 0 failed'
+ result.test_started()
+@@ -117,23 +93,15 @@
+ 
+ #########################################################
+ 
+-# hardwiring the test (since we have no framework)
+ result = TestResult()
+-test = FrameworkTest('test_add', result)
++
++test = TestMathFunctions('test_add', result)
+ assert result.summary() == '0 run, 0 failed'
+-assert test.was_setup == False
+-assert test.was_torn_down == False
+-test.test_running()
++test.run()
+ assert result.summary() == '1 run, 1 failed'
+-assert test.was_setup == True
+-assert test.was_torn_down == True
+ 
+-test = FrameworkTestNoSetupNoTeardown('test_sub', result)
+-assert test.was_setup == False
+-assert test.was_torn_down == False
+-test.test_running()
+-assert test.was_setup == False
+-assert test.was_torn_down == False
++test = TestMathFunctions('test_sub', result)
++test.run()
+ assert result.summary() == '2 run, 1 failed'
+ 
+ print('Done!')
+
+changeset:   6:a1d2cc84869b
+user:        Raymond Hettinger <python@rcn.com>
+date:        Tue Jul 11 11:28:44 2017 -0700
+summary:     Added test result reporting and failure handling
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -12,26 +12,55 @@
+ + have a teardown
+ - handle a failing test
+ - run many tests
+-- report collected results
+++ report collected results
+ '''
+ 
++##########################################################
++# This is our product.  We're building test framework like unittest, py.test, and nose
++
++class TestResult:
++    'Accumulate number of tests run and number of failures'
++
++    def __init__(self):
++        self.run_count = 0
++        self.failure_count = 0
++
++    def test_started(self):
++        self.run_count += 1
++
++    def test_failed(self):
++        self.failure_count += 1
++
++    def summary(self):
++        return f'{self.run_count} run, {self.failure_count} failed'
++
+ class TestCase:
+ 
+-    def __init__(self, method_name):
++    def __init__(self, method_name, result):
+         self.method_name = method_name
++        self.result = result
+         self.was_run = False
+         self.was_setup = False
+         self.was_torn_down = False
+ 
+     def run(self):
+-        method = getattr(self, 'set_up', None)
+-        if method is not None:
+-            method()
+-        method = getattr(self, self.method_name)
+-        method()
+-        method = getattr(self, 'tear_down', None)
+-        if method is not None:
+-            method()
++        # Run the "set_up" method if it exists
++        setup_method = getattr(self, 'set_up', None)
++        if setup_method is not None:
++            setup_method()
++
++        # Record a test started. Run the test. Catch and record failures.
++        self.result.test_started()
++        test_method = getattr(self, self.method_name)
++        try:
++            test_method()
++        except AssertionError:
++            self.result.test_failed()
++
++        # Run the "tear_down" method if it exists
++        teardown_method = getattr(self, 'tear_down', None)
++        if teardown_method is not None:
++            teardown_method()
+ 
+     def test_running(self):
+         assert self.was_run == False
+@@ -39,47 +68,72 @@
+         assert self.was_run == True
+ 
+ ##########################################################
++# These are the tests for our product
++
++def add(x, y):
++    return x * y            # <== Intentionally buggy code
++
++def sub(x, y):
++    return x - y            # <== Intentionally correct code
+ 
+ class FrameworkTest(TestCase):
+ 
+     def set_up(self):
+         self.was_setup = True
+ 
+-    def some_method(self):
++    def test_add(self):
+         self.was_run = True
++        assert add(3, 5) == 8
+ 
+-    def some_other_method(self):
++    def test_sub(self):
+         self.was_run = True
++        assert sub(10, 3) == 7
+ 
+     def tear_down(self):
+         self.was_torn_down = True
+ 
+ class FrameworkTestNoSetupNoTeardown(TestCase):
+ 
+-    def some_method(self):
++    def test_add(self):
+         self.was_run = True
+ 
+-    def some_other_method(self):
++    def test_sub(self):
+         self.was_run = True
++        assert sub(10, 3) == 7
++
++# Tests for the Test Result Class #######################
++
++result = TestResult()
++assert result.run_count == 0
++assert result.summary() == '0 run, 0 failed'
++result.test_started()
++assert result.run_count == 1
++assert result.summary() == '1 run, 0 failed'
++
++assert result.failure_count == 0
++result.test_failed()
++assert result.failure_count == 1
++assert result.summary() == '1 run, 1 failed'
+ 
+ #########################################################
+ 
+ # hardwiring the test (since we have no framework)
+-test = FrameworkTest('some_method')
++result = TestResult()
++test = FrameworkTest('test_add', result)
++assert result.summary() == '0 run, 0 failed'
+ assert test.was_setup == False
+ assert test.was_torn_down == False
+ test.test_running()
++assert result.summary() == '1 run, 1 failed'
+ assert test.was_setup == True
+ assert test.was_torn_down == True
+ 
+-test = FrameworkTestNoSetupNoTeardown('some_method')
++test = FrameworkTestNoSetupNoTeardown('test_sub', result)
+ assert test.was_setup == False
+ assert test.was_torn_down == False
+ test.test_running()
+ assert test.was_setup == False
+ assert test.was_torn_down == False
+-
+-test = FrameworkTest('some_other_method')
+-test.test_running()
++assert result.summary() == '2 run, 1 failed'
+ 
+ print('Done!')
+
+changeset:   5:10589e3c1456
+user:        Raymond Hettinger <python@rcn.com>
+date:        Mon Jul 10 17:30:13 2017 -0700
+summary:     Added support for tear_down
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -8,8 +8,8 @@
+ Todo (Desiderata):
+ 
+ + call a method
+-- have a setup
+-- have a teardown
+++ have a setup
+++ have a teardown
+ - handle a failing test
+ - run many tests
+ - report collected results
+@@ -21,6 +21,7 @@
+         self.method_name = method_name
+         self.was_run = False
+         self.was_setup = False
++        self.was_torn_down = False
+ 
+     def run(self):
+         method = getattr(self, 'set_up', None)
+@@ -28,12 +29,17 @@
+             method()
+         method = getattr(self, self.method_name)
+         method()
++        method = getattr(self, 'tear_down', None)
++        if method is not None:
++            method()
+ 
+     def test_running(self):
+         assert self.was_run == False
+         self.run()
+         assert self.was_run == True
+ 
++##########################################################
++
+ class FrameworkTest(TestCase):
+ 
+     def set_up(self):
+@@ -45,7 +51,10 @@
+     def some_other_method(self):
+         self.was_run = True
+ 
+-class FrameworkTestNoSetup(TestCase):
++    def tear_down(self):
++        self.was_torn_down = True
++
++class FrameworkTestNoSetupNoTeardown(TestCase):
+ 
+     def some_method(self):
+         self.was_run = True
+@@ -53,18 +62,22 @@
+     def some_other_method(self):
+         self.was_run = True
+ 
++#########################################################
+ 
+ # hardwiring the test (since we have no framework)
+ test = FrameworkTest('some_method')
+ assert test.was_setup == False
++assert test.was_torn_down == False
+ test.test_running()
+ assert test.was_setup == True
++assert test.was_torn_down == True
+ 
+-test = FrameworkTestNoSetup('some_method')
++test = FrameworkTestNoSetupNoTeardown('some_method')
+ assert test.was_setup == False
++assert test.was_torn_down == False
+ test.test_running()
+ assert test.was_setup == False
+-
++assert test.was_torn_down == False
+ 
+ test = FrameworkTest('some_other_method')
+ test.test_running()
+
+changeset:   4:05f52b94dff4
+user:        Raymond Hettinger <python@rcn.com>
+date:        Mon Jul 10 17:20:21 2017 -0700
+summary:     Added support for set_up
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -20,8 +20,12 @@
+     def __init__(self, method_name):
+         self.method_name = method_name
+         self.was_run = False
++        self.was_setup = False
+ 
+     def run(self):
++        method = getattr(self, 'set_up', None)
++        if method is not None:
++            method()
+         method = getattr(self, self.method_name)
+         method()
+ 
+@@ -32,6 +36,17 @@
+ 
+ class FrameworkTest(TestCase):
+ 
++    def set_up(self):
++        self.was_setup = True
++
++    def some_method(self):
++        self.was_run = True
++
++    def some_other_method(self):
++        self.was_run = True
++
++class FrameworkTestNoSetup(TestCase):
++
+     def some_method(self):
+         self.was_run = True
+ 
+@@ -41,7 +56,15 @@
+ 
+ # hardwiring the test (since we have no framework)
+ test = FrameworkTest('some_method')
++assert test.was_setup == False
+ test.test_running()
++assert test.was_setup == True
++
++test = FrameworkTestNoSetup('some_method')
++assert test.was_setup == False
++test.test_running()
++assert test.was_setup == False
++
+ 
+ test = FrameworkTest('some_other_method')
+ test.test_running()
+
+changeset:   3:3988d4ecfd9c
+user:        Raymond Hettinger <python@rcn.com>
+date:        Mon Jul 10 17:09:51 2017 -0700
+summary:     Factor-out test runner
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -7,7 +7,7 @@
+ 
+ Todo (Desiderata):
+ 
+-- call a method
+++ call a method
+ - have a setup
+ - have a teardown
+ - handle a failing test
+@@ -25,6 +25,11 @@
+         method = getattr(self, self.method_name)
+         method()
+ 
++    def test_running(self):
++        assert self.was_run == False
++        self.run()
++        assert self.was_run == True
++
+ class FrameworkTest(TestCase):
+ 
+     def some_method(self):
+@@ -36,11 +41,9 @@
+ 
+ # hardwiring the test (since we have no framework)
+ test = FrameworkTest('some_method')
+-print(test.was_run, '<-- this should be False')
+-test.run()
+-print(test.was_run, '<-- this should be True')
++test.test_running()
+ 
+ test = FrameworkTest('some_other_method')
+-print(test.was_run, '<-- this should be False')
+-test.run()
+-print(test.was_run, '<-- this should be True')
++test.test_running()
++
++print('Done!')
+
+changeset:   2:cbd1ffa5f8b5
+user:        Raymond Hettinger <python@rcn.com>
+date:        Mon Jul 10 16:59:18 2017 -0700
+summary:     Refactor to separate the framework from the test of the framework
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -15,21 +15,24 @@
+ - report collected results
+ '''
+ 
+-class FrameworkTest:
++class TestCase:
+ 
+     def __init__(self, method_name):
+         self.method_name = method_name
+         self.was_run = False
+ 
++    def run(self):
++        method = getattr(self, self.method_name)
++        method()
++
++class FrameworkTest(TestCase):
++
+     def some_method(self):
+         self.was_run = True
+ 
+     def some_other_method(self):
+         self.was_run = True
+ 
+-    def run(self):
+-        method = getattr(self, self.method_name)
+-        method()
+ 
+ # hardwiring the test (since we have no framework)
+ test = FrameworkTest('some_method')
+
+changeset:   1:f5212da04130
+user:        Raymond Hettinger <python@rcn.com>
+date:        Mon Jul 10 16:48:02 2017 -0700
+summary:     Generalize to run any method by name
+
+diff --git a/beck.py b/beck.py
+--- a/beck.py
++++ b/beck.py
+@@ -24,10 +24,20 @@
+     def some_method(self):
+         self.was_run = True
+ 
++    def some_other_method(self):
++        self.was_run = True
++
++    def run(self):
++        method = getattr(self, self.method_name)
++        method()
++
+ # hardwiring the test (since we have no framework)
+ test = FrameworkTest('some_method')
+ print(test.was_run, '<-- this should be False')
+-test.some_method()
++test.run()
+ print(test.was_run, '<-- this should be True')
+ 
+-
++test = FrameworkTest('some_other_method')
++print(test.was_run, '<-- this should be False')
++test.run()
++print(test.was_run, '<-- this should be True')
+
+changeset:   0:7b4ebe80e394
+user:        Raymond Hettinger <python@rcn.com>
+date:        Mon Jul 10 16:38:50 2017 -0700
+summary:     Working method call.  Tests are green.
+
+diff --git a/beck.py b/beck.py
+new file mode 100644
+--- /dev/null
++++ b/beck.py
+@@ -0,0 +1,33 @@
++''' Goals:
++
++* Develop a test framework like XUnit, JUnit, unittest, nose, py.test
++* Use a test-first TDD style
++* Use our framework to test itself
++* Practice Python fundamentals
++
++Todo (Desiderata):
++
++- call a method
++- have a setup
++- have a teardown
++- handle a failing test
++- run many tests
++- report collected results
++'''
++
++class FrameworkTest:
++
++    def __init__(self, method_name):
++        self.method_name = method_name
++        self.was_run = False
++
++    def some_method(self):
++        self.was_run = True
++
++# hardwiring the test (since we have no framework)
++test = FrameworkTest('some_method')
++print(test.was_run, '<-- this should be False')
++test.some_method()
++print(test.was_run, '<-- this should be True')
++
++
+

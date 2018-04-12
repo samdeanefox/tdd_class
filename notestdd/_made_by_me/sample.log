@@ -1,0 +1,13 @@
+root | CRITICAL | logging_demo:19 | The CPU is on fire
+root | ERROR | logging_demo:20 | 13 records read but only 11 written
+root | WARNING | logging_demo:21 | 10 credits remaining
+root | INFO | logging_demo:22 | ran 4 tests in 0.000013 seconds
+root | DEBUG | logging_demo:23 | garbage collector collected 7 objects
+mgmt | INFO | logging_demo:26 | Arrived to work at 9am today
+developers | CRITICAL | logging_demo:29 | The automation is broken!
+__main__ | INFO | logging_demo:32 | Currently executing __main__ module
+root | ERROR | logging_demo:38 | oops! something went wrong!
+Traceback (most recent call last):
+  File "/Users/samfo/Desktop/python_class/notestdd/_made_by_me/logging_demo.py", line 36, in <module>
+    print(values[100])
+IndexError: list index out of range

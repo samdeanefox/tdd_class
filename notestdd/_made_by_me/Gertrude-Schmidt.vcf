@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Schmidt;Gertrude
+FN:Gertrude, Schmidt
+ORG:Earthborn Studios Inc
+TITLE: VP Business Development
+TEL;WORK;VOICE:(205) 559-555-6700
+TEL;HOME;VOICE:(205) 613-0280
+TEL;
+ADR;WORK;PREF:;;7575 Parkway Dr;Leeds;AL;35094;United States of America
+EMAIL:gertrude@example.com
+REV:20080424T195243Z
+END:VCARD

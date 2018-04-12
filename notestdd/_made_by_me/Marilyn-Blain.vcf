@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Blain;Marilyn
+FN:Marilyn, Blain
+ORG:Earthborn Studios Inc
+TITLE: Raisin Packager
+TEL;WORK;VOICE:(205) 559-555-2379
+TEL;HOME;VOICE:(205) 613-0280
+TEL;
+ADR;WORK;PREF:;;7575 Parkway Dr;Leeds;AL;35094;United States of America
+EMAIL:marilyn@example.com
+REV:20080424T195243Z
+END:VCARD
