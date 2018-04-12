@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="00d8a06f-2796-4a50-8b23-99f22573bc7f" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/notestdd/_made_by_me/.cache/v/cache/lastfailed" afterPath="$PROJECT_DIR$/notestdd/_made_by_me/.cache/v/cache/lastfailed" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/notestdd/_made_by_me/dictionary.py" afterPath="$PROJECT_DIR$/notestdd/_made_by_me/dictionary.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/notestdd/_made_by_me/test_dict.py" afterPath="$PROJECT_DIR$/notestdd/_made_by_me/test_dict.py" />
     </list>
     <ignored path="tdd_class.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,8 +27,8 @@
       <file leaf-file-name="dictionary.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/notestdd/_made_by_me/dictionary.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420">
-              <caret line="28" column="40" selection-start-line="28" selection-start-column="40" selection-end-line="28" selection-end-column="40" />
+            <state relative-caret-position="155">
+              <caret line="20" column="25" selection-start-line="20" selection-start-column="25" selection-end-line="20" selection-end-column="25" />
               <folding />
             </state>
           </provider>
@@ -352,8 +352,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/notestdd/_made_by_me/dictionary.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="28" column="40" selection-start-line="28" selection-start-column="40" selection-end-line="28" selection-end-column="40" />
+        <state relative-caret-position="155">
+          <caret line="20" column="25" selection-start-line="20" selection-start-column="25" selection-end-line="20" selection-end-column="25" />
           <folding />
         </state>
       </provider>

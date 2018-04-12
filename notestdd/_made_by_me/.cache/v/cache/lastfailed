@@ -1,3 +1,6 @@
 {
+  "test_dict.py::test_basics": true,
+  "test_dict.py::test_delete_key": true,
+  "test_dict.py::test_update_key": true,
   "test_vcard.py::test_script": true
 }
